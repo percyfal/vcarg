@@ -1,0 +1,60 @@
+from pathlib import Path
+
+##############################
+# Configuration
+##############################
+configfile: "config/config.yaml"
+
+
+include: "rules/common.smk"
+
+
+##############################
+# Path variables
+##############################
+bioproject = Path(config.get("bioproject", config.get("project", "UnknownProject")))
+project_dir = Path("work") / bioproject
+
+pathvars:
+    project = str(bioproject)
+
+
+##############################
+# Default target
+##############################
+i = sampleinfo.loc[:, "SampleAlias"].isin(config["samples"])
+sinfo = sampleinfo.loc[i, :]
+
+# ALL = expand(
+#     "bam_bwa_srr/{samplealias}/{srrun}.sort.bam",
+#     srrun=sinfo["Run"],
+#     samplealias=sinfo["SampleAlias"],
+# )
+ALL = {"sampleinfo": bioproject / "sampleinfo.csv"}
+
+
+rule all:
+    input:
+        **ALL,
+    default_target: True
+
+
+##############################
+# Rules
+##############################
+include: "rules/datasources.smk"
+include: "rules/sampleinfo.smk"
+include: "rules/sra.smk"
+include: "rules/bwa.smk"
+
+
+onstart:
+    print("Starting workflow...")
+
+
+onerror:
+    print("An error occurred during the workflow execution.")
+
+
+onsuccess:
+    print("Workflow completed successfully!")

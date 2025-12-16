@@ -1,0 +1,10 @@
+# -*- yaml -*-
+restart-times: 0
+keep-going: true
+max-status-checks-per-second: 10
+latency-wait: 60
+use-envmodules: false
+use-conda: false
+rerun-triggers: mtime
+rerun-incomplete: true
+cores: 15

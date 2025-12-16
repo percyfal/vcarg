@@ -1,0 +1,64 @@
+$schema: "https://json-schema.org/draft/2020-12/schema"
+
+description: Bioprojarg snakemake configuration file schema
+
+type: object
+
+properties:
+  bioproject:
+    description: ENA bioproject name
+    type: string
+    pattern: "[^ ]+"
+  project:
+    description: Project name
+    type: string
+    pattern: "[^ ]+"
+  reference:
+    description: Path to reference file
+    type: string
+    format: uri
+  samples:
+    description: List of samples
+    type: array
+    items:
+      type: string
+  sampleinfo_script:
+    description: Script to generate sampleinfo file from SraRunInfo and samplesheet
+    type: string
+    format: uri
+  samplesheet:
+    description: Samplesheet with metadata on samples
+    type: object
+    properties:
+      url:
+        type: string
+        format: uri
+        description: Remote URL location of samplesheet
+      script:
+        type: string
+        format: uri
+        description: >-
+          Path to script for converting downloaded sample metadata to
+          CSV output. Script must take the downloaded file as input
+          argument.
+
+  species:
+    description: Species name
+    type: string
+  sraruninfo:
+    type: object
+    description: SraRunInfo download configuration
+    properties:
+      filter:
+        description: >-
+          Apply qsv py filter to SraRunInfo file. Note that column
+          names need to be provide in lower case.
+        example: 'librarystrategy=="WGS" && samplename!="Assembly Plant"'
+        type: string
+
+
+
+required:
+  - bioproject
+  - reference
+  - species

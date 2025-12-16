@@ -1,0 +1,12 @@
+species: Mimulus aurantiacus
+bioproject: PRJNA549183
+datasources:
+  ref/M_aurantiacus_v1_splitline_ordered.fasta: http://mimubase.org/FTP/Genomes/Maurantiacus_v1.0/M_aurantiacus_v1_splitline_ordered.fasta
+  ref/MAUR_annotation_functional_submission.gff: http://mimubase.org/FTP/Genomes/Maurantiacus_v1.0/MAUR_annotation_functional_submission.gff
+
+# Reference is located in ref/ and must be declared in datasources
+reference: M_aurantiacus_v1_splitline_ordered.fasta
+
+# Samples
+samples:
+  - ARI-159_83
