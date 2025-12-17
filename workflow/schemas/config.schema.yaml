@@ -17,6 +17,11 @@ properties:
     description: Path to reference file
     type: string
     format: uri
+  regions:
+    description: List of regions
+    type: array
+    items:
+      type: string
   samples:
     description: List of samples
     type: array

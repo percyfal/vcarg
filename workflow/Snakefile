@@ -6,31 +6,52 @@ from pathlib import Path
 configfile: "config/config.yaml"
 
 
+bioproject = Path(config.get("bioproject", config.get("project", "UnknownProject")))
+project_dir = Path("work") / bioproject
+
 include: "rules/common.smk"
 
 
 ##############################
 # Path variables
 ##############################
-bioproject = Path(config.get("bioproject", config.get("project", "UnknownProject")))
-project_dir = Path("work") / bioproject
-
 pathvars:
-    project = str(bioproject)
+    project = str(bioproject),
+    ref = str(bioproject / "ref"),
 
 
 ##############################
 # Default target
 ##############################
 i = sampleinfo.loc[:, "SampleAlias"].isin(config["samples"])
-sinfo = sampleinfo.loc[i, :]
+sampleinfo = sampleinfo.loc[i, :]
 
-# ALL = expand(
-#     "bam_bwa_srr/{samplealias}/{srrun}.sort.bam",
-#     srrun=sinfo["Run"],
-#     samplealias=sinfo["SampleAlias"],
-# )
-ALL = {"sampleinfo": bioproject / "sampleinfo.csv"}
+# Wildcard constraints
+wildcard_constraints:
+    callmode="raw|bqsr",
+    callset="all",
+    samplealias="(" + "|".join(sampleinfo.SampleAlias.values) + ")",
+
+
+ALL = {
+    "sampleinfo": bioproject / "sampleinfo.csv",
+    #"bwa_index": bioproject / "ref" / config["reference"],
+    # "bwa": expand(
+    #     "<project>/bam_bwa_srr/{samplealias}/{srrun}.sort.cram",
+    #     zip,
+    #     srrun=sampleinfo["Run"],
+    #     samplealias=sampleinfo["SampleAlias"],
+    # ),
+    "gatk_filter": expand(
+        "<project>/gatk-hc-filter-bqsr/{samplealias}.g.vcf.gz",
+        samplealias=sampleinfo["SampleAlias"],
+    ),
+    "gatk_cram": expand(
+        "<project>/gatk-bqsr-cram/{samplealias}.cram",
+        samplealias=sampleinfo["SampleAlias"],
+    ),
+    "gatk_genotype": "<project>/gatk-genotype-gvcf-bqsr/all.allsites.vcf.gz",
+}
 
 
 rule all:
@@ -46,6 +67,8 @@ include: "rules/datasources.smk"
 include: "rules/sampleinfo.smk"
 include: "rules/sra.smk"
 include: "rules/bwa.smk"
+include: "rules/gatk.smk"
+include: "rules/ref.smk"
 
 
 onstart:

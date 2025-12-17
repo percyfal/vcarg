@@ -25,6 +25,7 @@ bioprojarg = { path = ".", editable = true }
 [feature.snakemake.dependencies]
 snakemake = ">=9.14"
 snakemake-storage-plugin-http = "*"
+pulp = ">=2.8.0,<3"
 
 [feature.textutils.dependencies]
 csvtk = "*"
@@ -82,12 +83,20 @@ toml-lint = "taplo lint --verbose **/pyproject.toml"
 typecheck-python = "mypy"
 typos = "typos --write-changes --force-exclude"
 
+[feature.gatk4.dependencies]
+gatk4 = "*"
+picard = "*"
+r-ggplot2 = ">=4.0.1,<5"
+r-gplots = ">=3.3.0,<4"
+r-gsalib = ">=2.2.1,<3"
+
 [environments]
 snakemake = { features = ["snakemake"], solve-group = "default" }
 sratools = { features = ["sratools", "textutils"], solve-group = "default" }
 textutils = { features = ["textutils"], solve-group = "default" }
 full = { features = [
   "bwa",
+  "gatk4",
   "snakemake",
   "sratools",
   "test",

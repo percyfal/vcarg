@@ -13,7 +13,19 @@ datasources:
 
 # Reference is located in ref/ and must be declared in datasources
 reference: M_aurantiacus_v1_splitline_ordered.fasta
-
+regions:
+  - LG4:10000000-14000000
 # Samples
 samples:
-  - ARI-159_83
+  - PUN-R-ELF
+  - PUN-R-JMC
+  - PUN-Y-INJ
+  - PUN-Y-BCRD
+  - CLV_4
+  # - ARI-159_83
+  # - PUN-R-LH
+  # - PUN-Y-PCT
+  # - PUN-Y-LO
+  # - PUN-R-UCSD
+  # - PUN-R-MT
+  # - PUN-Y-POTR

@@ -1,7 +1,7 @@
 rule download_datasources:
     """Download datasources listed in config file"""
     output:
-        urltarget="{urltarget}",
+        urltarget="<project>/{urltarget}",
     input:
         lambda wildcards: storage(
             config.get("datasources", {}).get(wildcards.urltarget)
@@ -9,7 +9,7 @@ rule download_datasources:
     wildcard_constraints:
         urltarget=f'({"|".join([str(x) for x in set(datasources.keys())])})',
     conda:
-        ".pixi/envs/full"
+        "../envs/storage.yaml"
     benchmark:
         "benchmarks/{urltarget}.benchmark.txt"
     log:

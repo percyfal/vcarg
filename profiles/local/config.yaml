@@ -8,3 +8,4 @@ use-conda: false
 rerun-triggers: mtime
 rerun-incomplete: true
 cores: 15
+notemp: true
