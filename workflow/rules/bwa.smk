@@ -4,7 +4,7 @@ BWA_INDEX_SUFFIX = ["amb", "ann", "bwt", "pac", "sa"]
 rule bwa_index:
     """Make bwa index"""
     output:
-        index=expand("<project>/bwa_index/{{prefix}}.fasta.{sfx}", sfx=BWA_INDEX_SUFFIX),
+        index=expand("<work>/bwa_index/{{prefix}}.fasta.{sfx}", sfx=BWA_INDEX_SUFFIX),
     input:
         fasta="<ref>/{prefix}.fasta",
     conda:
@@ -12,9 +12,9 @@ rule bwa_index:
     params:
         prefix=lambda wildcards, output: os.path.splitext(output.index[0])[0],
     benchmark:
-        "benchmarks/<project>/bwa_index/{prefix}.fasta.benchmark.txt"
+        "benchmarks/<work>/bwa_index/{prefix}.fasta.benchmark.txt"
     log:
-        "logs/<project>/bwa_index/{prefix}.fasta.log",
+        "logs/<work>/bwa_index/{prefix}.fasta.log",
     threads: 1
     shell:
         """
@@ -25,16 +25,16 @@ rule bwa_index:
 rule bam_bwa_srr:
     """Map SRR data on the fly and convert to bam, without marking duplicates.
 
-    NB: This will use the SampleName column to identify the sample
+    NB: This will use the SampleAlias column to identify the sample
     (not the SRS id)."""
     output:
-        cram=temp("<project>/bam_bwa_srr/{samplealias}/{srrun}.sort.cram"),
-        crai=temp("<project>/bam_bwa_srr/{samplealias}/{srrun}.sort.cram.crai"),
+        cram=temp("<work>/bam_bwa_srr/{samplename}/{srrun}.sort.cram"),
+        crai=temp("<work>/bam_bwa_srr/{samplename}/{srrun}.sort.cram.crai"),
     input:
-        srr="<project>/sra/{srrun}/{srrun}.sra",
+        srr="<work>/sra/{srrun}/{srrun}.sra",
         reference=f"<ref>/{config['reference']}",
         index=expand(
-            "<project>/{ref}.{sfx}",
+            "<work>/{ref}.{sfx}",
             ref=f"bwa_index/{config['reference']}",
             sfx=BWA_INDEX_SUFFIX,
         ),
@@ -46,9 +46,9 @@ rule bam_bwa_srr:
     conda:
         "../envs/bwa.yaml"
     benchmark:
-        "benchmarks/<project>/bam_bwa_srr/{samplealias}/{srrun}.sort.cram.benchmark.txt"
+        "benchmarks/<work>/bam_bwa_srr/{samplename}/{srrun}.sort.cram.benchmark.txt"
     log:
-        "logs/<project>/bam_bwa_srr/{samplealias}/{srrun}.sort.cram.log",
+        "logs/<work>/bam_bwa_srr/{samplename}/{srrun}.sort.cram.log",
     threads: 12
     priority: 50
     shell:
@@ -70,19 +70,19 @@ rule bam_bwa_srr:
 rule merge_cram:
     """Merge run mappings to sample level cram"""
     output:
-        cram="<project>/merge_cram/{samplealias}.cram",
-        crai="<project>/merge_cram/{samplealias}.cram.crai",
+        cram="<work>/merge_cram/{samplename}.cram",
+        crai="<work>/merge_cram/{samplename}.cram.crai",
     input:
         cram=lambda wildcards: expand(
-            "<project>/bam_bwa_srr/{{samplealias}}/{srrun}.sort.cram",
+            "<work>/bam_bwa_srr/{{samplename}}/{srrun}.sort.cram",
             srrun=get_sample_runs(wildcards),
         ),
     conda:
         "../envs/bwa.yaml"
     benchmark:
-        "<benchmarks>/merge_cram/<project>/merge_cram/{samplealias}.cram.benchmark.txt"
+        "<benchmarks>/merge_cram/<work>/merge_cram/{samplename}.cram.benchmark.txt"
     log:
-        "<logs>/merge_cram/<project>/merge_cram/{samplealias}.cram.log",
+        "<logs>/merge_cram/<work>/merge_cram/{samplename}.cram.log",
     threads: 1
     shell:
         """
@@ -97,17 +97,17 @@ rule cram_2_bam:
     currently not supported by GATK.
     """
     output:
-        bam=temp("<project>/cram_2_bam/{samplealias}.bam"),
-        csi=temp("<project>/cram_2_bam/{samplealias}.bam.csi"),
+        bam=temp("<work>/cram_2_bam/{samplename}.bam"),
+        csi=temp("<work>/cram_2_bam/{samplename}.bam.csi"),
     input:
-        cram="<project>/merge_cram/{samplealias}.cram",
-        crai="<project>/merge_cram/{samplealias}.cram.crai",
+        cram="<work>/merge_cram/{samplename}.cram",
+        crai="<work>/merge_cram/{samplename}.cram.crai",
     conda:
         "../envs/bwa.yaml"
     benchmark:
-        "<benchmarks>/<project>/cram_2_bam/{samplealias}.benchmark.txt"
+        "<benchmarks>/<work>/cram_2_bam/{samplename}.benchmark.txt"
     log:
-        "<logs>/<project>/cram_2_bam/{samplealias}.log",
+        "<logs>/<work>/cram_2_bam/{samplename}.log",
     threads: 1
     shell:
         """

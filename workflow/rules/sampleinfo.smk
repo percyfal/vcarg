@@ -1,29 +1,31 @@
 rule download_sraruninfo:
     """Download sraruninfo for bioproject."""
     output:
-        csv="<project>/resources/SraRunInfo.csv",
+        csv="<resources>/SraRunInfo.<bioproject>.csv",
     params:
-        bioproj=lambda wildcards, output: dname(dname(output.csv)),
+        bioproj=lambda wildcards, output: Path(output.csv).stem.split(".")[1],
         pyfilter=config.get("sraruninfo", {}).get("filter", ""),
     conda:
         "../envs/sratools.yaml"
     benchmark:
-        "<benchmarks>/download_sraruninfo/<project>/resources/SraRunInfo.csv.benchmark.txt"
+        "<benchmarks>/download_sraruninfo/<resources>/SraRunInfo.<bioproject>.csv.benchmark.txt"
     log:
-        "<logs>/download_sraruninfo/<project>/resources/SraRunInfo.csv.log",
+        "<logs>/download_sraruninfo/<resources>/SraRunInfo.<bioproject>.csv.log",
+    priority: 500
     threads: 1
     shell:
         """
         esearch -db sra -query '{params.bioproj}' |
-            efetch -format runinfo |
-            qsv py filter "{params.pyfilter}" > {output.csv} 2> {log}
+            efetch -format runinfo > {output.csv}.bak 2> {log}
+        cat {output.csv}.bak | qsv py filter "{params.pyfilter}" > {output.csv} 2>> {log}
+        rm {output.csv}.bak
         """
 
 
 rule make_samples_table:
     """Download sample information and create samples table"""
     output:
-        csv="<project>/resources/samples.csv",
+        csv="<resources>/samples.csv",
     input:
         storage.http(config.get("samplesheet", {}).get("url", [])),
     params:
@@ -31,9 +33,9 @@ rule make_samples_table:
     conda:
         "../envs/textutils.yaml"
     benchmark:
-        "<benchmarks>/make_samples_table/<project>/resources/samples.csv.benchmark.txt"
+        "<benchmarks>/make_samples_table/<resources>/samples.csv.benchmark.txt"
     log:
-        "<logs>/make_samples_table/<project>/resources/samples.csv.log",
+        "<logs>/make_samples_table/<resources>/samples.csv.log",
     threads: 1
     script:
         "{params.exe}"
@@ -42,10 +44,10 @@ rule make_samples_table:
 rule join_sraruninfo_samples:
     """Join SraRunInfo.csv and samples.csv"""
     output:
-        sampleinfo="<project>/sampleinfo.csv",
+        sampleinfo="sampleinfo.csv",
     input:
-        runinfo="<project>/resources/SraRunInfo.csv",
-        samples="<project>/resources/samples.csv",
+        runinfo="<resources>/SraRunInfo.<bioproject>.csv",
+        samples="<resources>/samples.csv",
     params:
         exe=config.get("sampleinfo_script", ""),
     conda:
@@ -54,6 +56,7 @@ rule join_sraruninfo_samples:
         "benchmarks/sampleinfo.csv.benchmark.txt"
     log:
         "logs/sampleinfo.csv.log",
+    priority: 1000
     threads: 1
     script:
         "{params.exe}"

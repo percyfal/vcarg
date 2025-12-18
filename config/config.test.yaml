@@ -29,3 +29,5 @@ samples:
   # - PUN-R-UCSD
   # - PUN-R-MT
   # - PUN-Y-POTR
+outgroup_populations:
+  - clevelandii

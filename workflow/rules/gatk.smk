@@ -1,18 +1,18 @@
 rule gatk_haplotypecaller:
     """Run GATK HaplotypeCaller"""
     output:
-        vcf="<project>/gatk-hc-{callmode}/{samplealias}{mode}.vcf.gz",
-        tbi="<project>/gatk-hc-{callmode}/{samplealias}{mode}.vcf.gz.tbi",
+        vcf="<work>/gatk-hc-{callmode}/{samplename}{mode}.vcf.gz",
+        tbi="<work>/gatk-hc-{callmode}/{samplename}{mode}.vcf.gz.tbi",
     input:
         bam=branch(
             lambda wildcards: wildcards.callmode == "raw",
-            then="<project>/cram_2_bam/{samplealias}.bam",
-            otherwise="<project>/gatk-bqsr/{samplealias}.bam",
+            then="<work>/cram_2_bam/{samplename}.bam",
+            otherwise="<work>/gatk-bqsr/{samplename}.bam",
         ),
         csi=branch(
             lambda wildcards: wildcards.callmode == "raw",
-            then="<project>/cram_2_bam/{samplealias}.bam.csi",
-            otherwise="<project>/gatk-bqsr/{samplealias}.bai",
+            then="<work>/cram_2_bam/{samplename}.bam.csi",
+            otherwise="<work>/gatk-bqsr/{samplename}.bai",
         ),
         ref=f"<ref>/{config['reference']}",
         dict=re.sub("(.fasta|.fa)$", ".dict", f"<ref>/{config['reference']}"),
@@ -36,9 +36,9 @@ rule gatk_haplotypecaller:
     conda:
         "../envs/gatk.yaml"
     benchmark:
-        "<benchmarks>/gatk_haplotypecaller/<project>/gatk-hc-{callmode}/{samplealias}{mode}.vcf.gz.benchmark.txt"
+        "<benchmarks>/gatk_haplotypecaller/<work>/gatk-hc-{callmode}/{samplename}{mode}.vcf.gz.benchmark.txt"
     log:
-        "<logs>/gatk_haplotypecaller/<project>/gatk-hc-{callmode}/{samplealias}{mode}.vcf.gz.log",
+        "<logs>/gatk_haplotypecaller/<work>/gatk-hc-{callmode}/{samplename}{mode}.vcf.gz.log",
     priority: 100
     threads: 4
     shell:
@@ -54,19 +54,19 @@ rule gatk_haplotypecaller:
 rule gatk_raw_or_bqsr_variant_filtration:
     """Filter raw or bqsr variants"""
     output:
-        vcf="<project>/gatk-hc-filter-{callmode}/{samplealias}{mode}.vcf.gz",
-        tbi="<project>/gatk-hc-filter-{callmode}/{samplealias}{mode}.vcf.gz.tbi",
+        vcf="<work>/gatk-hc-filter-{callmode}/{samplename}{mode}.vcf.gz",
+        tbi="<work>/gatk-hc-filter-{callmode}/{samplename}{mode}.vcf.gz.tbi",
     input:
-        vcf="<project>/gatk-hc-{callmode}/{samplealias}{mode}.vcf.gz",
-        tbi="<project>/gatk-hc-{callmode}/{samplealias}{mode}.vcf.gz.tbi",
+        vcf="<work>/gatk-hc-{callmode}/{samplename}{mode}.vcf.gz",
+        tbi="<work>/gatk-hc-{callmode}/{samplename}{mode}.vcf.gz.tbi",
     params:
         options=gatk_raw_or_bqsr_variant_filtration_options,
     conda:
         "../envs/gatk.yaml"
     benchmark:
-        "<benchmarks>/gatk_raw_or_bqsr_variant_filtration/<project>/gatk-hc-filter-{callmode}/{samplealias}{mode}.vcf.gz.benchmark.txt"
+        "<benchmarks>/gatk_raw_or_bqsr_variant_filtration/<work>/gatk-hc-filter-{callmode}/{samplename}{mode}.vcf.gz.benchmark.txt"
     log:
-        "<logs>/gatk_raw_or_bqsr_variant_filtration/<project>/gatk-hc-filter-{callmode}/{samplealias}{mode}.vcf.gz.log",
+        "<logs>/gatk_raw_or_bqsr_variant_filtration/<work>/gatk-hc-filter-{callmode}/{samplename}{mode}.vcf.gz.log",
     threads: 1
     shell:
         """
@@ -77,13 +77,13 @@ rule gatk_raw_or_bqsr_variant_filtration:
 rule gatk_base_recalibrator:
     """Recalibrate bases using raw variant calls as known sites"""
     output:
-        table="<project>/gatk-bqsr/{samplealias}.table",
+        table="<work>/gatk-bqsr/{samplename}.table",
     input:
-        bam="<project>/cram_2_bam/{samplealias}.bam",
-        csi="<project>/cram_2_bam/{samplealias}.bam.csi",
+        bam="<work>/cram_2_bam/{samplename}.bam",
+        csi="<work>/cram_2_bam/{samplename}.bam.csi",
         known_sites=expand(
-            "<project>/gatk-hc-raw/{samplealias}.g.vcf.gz",
-            samplealias=sampleinfo.SampleAlias.values,
+            "<work>/gatk-hc-raw/{samplename}.g.vcf.gz",
+            samplename=sampleinfo.SampleName.values,
         ),
         ref=f"<ref>/{config['reference']}",
     params:
@@ -93,9 +93,9 @@ rule gatk_base_recalibrator:
     conda:
         "../envs/gatk.yaml"
     benchmark:
-        "<benchmarks>/gatk_base_recalibrator/<project>/gatk-bqsr/{samplealias}.table.benchmark.txt"
+        "<benchmarks>/gatk_base_recalibrator/<work>/gatk-bqsr/{samplename}.table.benchmark.txt"
     log:
-        "<logs>/gatk_base_recalibrator/<project>/gatk-bqsr/{samplealias}.table.log",
+        "<logs>/gatk_base_recalibrator/<work>/gatk-bqsr/{samplename}.table.log",
     threads: 1
     shell:
         """
@@ -106,18 +106,18 @@ rule gatk_base_recalibrator:
 rule gatk_apply_bqsr:
     """Apply BQSR on input bam"""
     output:
-        recal=temp("<project>/gatk-bqsr/{samplealias}.bam"),
-        bai=temp("<project>/gatk-bqsr/{samplealias}.bai"),
+        recal=temp("<work>/gatk-bqsr/{samplename}.bam"),
+        bai=temp("<work>/gatk-bqsr/{samplename}.bai"),
     input:
-        table="<project>/gatk-bqsr/{samplealias}.table",
-        bam="<project>/cram_2_bam/{samplealias}.bam",
-        csi="<project>/cram_2_bam/{samplealias}.bam.csi",
+        table="<work>/gatk-bqsr/{samplename}.table",
+        bam="<work>/cram_2_bam/{samplename}.bam",
+        csi="<work>/cram_2_bam/{samplename}.bam.csi",
     conda:
         "../envs/gatk.yaml"
     benchmark:
-        "<benchmarks>/gatk_apply_bqsr/<project>/gatk-bqsr/{samplealias}.output.txt"
+        "<benchmarks>/gatk_apply_bqsr/<work>/gatk-bqsr/{samplename}.output.txt"
     log:
-        "<logs>/gatk_apply_bqsr/<project>/gatk-bqsr/{samplealias}.log",
+        "<logs>/gatk_apply_bqsr/<work>/gatk-bqsr/{samplename}.log",
     threads: 1
     shell:
         """
@@ -128,13 +128,13 @@ rule gatk_apply_bqsr:
 rule gatk_base_recalibrator_after:
     """Generate calibrated table for recalibrated BAM file"""
     output:
-        table="<project>/gatk-bqsr/{samplealias}.after.table",
+        table="<work>/gatk-bqsr/{samplename}.after.table",
     input:
-        bam="<project>/gatk-bqsr/{samplealias}.bam",
-        bai="<project>/gatk-bqsr/{samplealias}.bai",
+        bam="<work>/gatk-bqsr/{samplename}.bam",
+        bai="<work>/gatk-bqsr/{samplename}.bai",
         known_sites=expand(
-            "<project>/gatk-hc-filter-raw/{samplealias}.g.vcf.gz",
-            samplealias=sampleinfo.SampleAlias.values,
+            "<work>/gatk-hc-filter-raw/{samplename}.g.vcf.gz",
+            samplename=sampleinfo.SampleName.values,
         ),
         ref=f"<ref>/{config['reference']}",
     params:
@@ -144,9 +144,9 @@ rule gatk_base_recalibrator_after:
     conda:
         "../envs/gatk.yaml"
     benchmark:
-        "<benchmarks>/gatk_base_recalibrator_after/<project>/gatk-bqsr/{samplealias}.after.table.benchmark.txt"
+        "<benchmarks>/gatk_base_recalibrator_after/<work>/gatk-bqsr/{samplename}.after.table.benchmark.txt"
     log:
-        "<logs>/gatk_base_recalibrator_after/<project>/gatk-bqsr/{samplealias}.after.table.log",
+        "<logs>/gatk_base_recalibrator_after/<work>/gatk-bqsr/{samplename}.after.table.log",
     threads: 1
     shell:
         """
@@ -157,17 +157,17 @@ rule gatk_base_recalibrator_after:
 rule gatk_analyze_covariates:
     """Analyze covariates from before and after bqsr"""
     output:
-        csv="<project>/gatk-bqsr/{samplealias}.after.csv",
-        pdf="<project>/gatk-bqsr/{samplealias}.after.pdf",
+        csv="<work>/gatk-bqsr/{samplename}.after.csv",
+        pdf="<work>/gatk-bqsr/{samplename}.after.pdf",
     input:
-        before="<project>/gatk-bqsr/{samplealias}.table",
-        after="<project>/gatk-bqsr/{samplealias}.after.table",
+        before="<work>/gatk-bqsr/{samplename}.table",
+        after="<work>/gatk-bqsr/{samplename}.after.table",
     conda:
         "../envs/gatk.yaml"
     benchmark:
-        "<benchmarks>/gatk_analyze_covariates/<project>/gatk-bqsr/{samplealias}.after.csv.benchmark.txt"
+        "<benchmarks>/gatk_analyze_covariates/<work>/gatk-bqsr/{samplename}.after.csv.benchmark.txt"
     log:
-        "<logs>/gatk_analyze_covariates/<project>/gatk-bqsr/{samplealias}.after.csv.log",
+        "<logs>/gatk_analyze_covariates/<work>/gatk-bqsr/{samplename}.after.csv.log",
     threads: 1
     shell:
         """
@@ -180,18 +180,18 @@ rule gatk_analyze_covariates:
 rule gatk_bqsr_bam_2_cram:
     """ConvertBQSR BAM to CRAM format"""
     output:
-        cram="<project>/gatk-bqsr-cram/{samplealias}.cram",
-        crai="<project>/gatk-bqsr-cram/{samplealias}.cram.crai",
+        cram="<work>/gatk-bqsr-cram/{samplename}.cram",
+        crai="<work>/gatk-bqsr-cram/{samplename}.cram.crai",
     input:
-        bam="<project>/gatk-bqsr/{samplealias}.bam",
-        bai="<project>/gatk-bqsr/{samplealias}.bai",
+        bam="<work>/gatk-bqsr/{samplename}.bam",
+        bai="<work>/gatk-bqsr/{samplename}.bai",
         ref=f"<ref>/{config['reference']}",
     conda:
         "../envs/bwa.yaml"
     benchmark:
-        "<benchmarks>/gatk_bqsr_bam_2_cram/<project>/gatk-bqsr/{samplealias}.cram.benchmark.txt"
+        "<benchmarks>/gatk_bqsr_bam_2_cram/<work>/gatk-bqsr/{samplename}.cram.benchmark.txt"
     log:
-        "<logs>/gatk_bqsr_bam_2_cram/<project>/gatk-bqsr/{samplealias}.cram.log",
+        "<logs>/gatk_bqsr_bam_2_cram/<work>/gatk-bqsr/{samplename}.cram.log",
     threads: 1
     shell:
         """
@@ -206,16 +206,16 @@ rule gatk_combine_gvcfs:
     input to BQSR as known sites.
     """
     output:
-        vcf="<project>/gatk-combine-gvcf-{callmode}/{callset}.g.vcf.gz",
-        tbi="<project>/gatk-combine-gvcf-{callmode}/{callset}.g.vcf.gz.tbi",
+        vcf="<work>/gatk-combine-gvcf-{callmode}/{callset}.g.vcf.gz",
+        tbi="<work>/gatk-combine-gvcf-{callmode}/{callset}.g.vcf.gz.tbi",
     input:
         vcf=expand(
-            "<project>/gatk-hc-{{callmode}}/{samplealias}.g.vcf.gz",
-            samplealias=sampleinfo["SampleAlias"],
+            "<work>/gatk-hc-{{callmode}}/{samplename}.g.vcf.gz",
+            samplename=sampleinfo["SampleName"],
         ),
         tbi=expand(
-            "<project>/gatk-hc-{{callmode}}/{samplealias}.g.vcf.gz.tbi",
-            samplealias=sampleinfo["SampleAlias"],
+            "<work>/gatk-hc-{{callmode}}/{samplename}.g.vcf.gz.tbi",
+            samplename=sampleinfo["SampleName"],
         ),
         ref=f"<ref>/{config['reference']}",
     params:
@@ -224,9 +224,9 @@ rule gatk_combine_gvcfs:
     conda:
         "../envs/gatk.yaml"
     benchmark:
-        "<benchmarks>/gatk_combine_gvcfs/<project>/gatk-combine-gvcf-{callmode}/{callset}.g.vcf.gz.benchmark.txt"
+        "<benchmarks>/gatk_combine_gvcfs/<work>/gatk-combine-gvcf-{callmode}/{callset}.g.vcf.gz.benchmark.txt"
     log:
-        "<logs>/gatk_combine_gvcfs/<project>/gatk-combine-gvcf-{callmode}/{callset}.g.vcf.gz.log",
+        "<logs>/gatk_combine_gvcfs/<work>/gatk-combine-gvcf-{callmode}/{callset}.g.vcf.gz.log",
     threads: 1
     shell:
         """
@@ -237,19 +237,19 @@ rule gatk_combine_gvcfs:
 rule gatk_genotype_gvcfs:
     """GATK GenotypeGVCFs"""
     output:
-        vcf="<project>/gatk-genotype-gvcf-{callmode}/{callset}.allsites.vcf.gz",
-        tbi="<project>/gatk-genotype-gvcf-{callmode}/{callset}.allsites.vcf.gz.tbi",
+        vcf="<results>/gatk-genotype-gvcf-{callmode}/{callset}.allsites.vcf.gz",
+        tbi="<results>/gatk-genotype-gvcf-{callmode}/{callset}.allsites.vcf.gz.tbi",
     input:
-        vcf="<project>/gatk-combine-gvcf-{callmode}/{callset}.g.vcf.gz",
+        vcf="<work>/gatk-combine-gvcf-{callmode}/{callset}.g.vcf.gz",
         ref=f"<ref>/{config['reference']}",
     params:
         intervals=" ".join([f"-L {ivl}" for ivl in config.get("regions", [])]),
     conda:
         "../envs/gatk.yaml"
     benchmark:
-        "<benchmarks>/gatk_genotype_gvcfs/<project>/gatk-genotype-gvcf-{callmode}/{callset}.allsites.vcf.gz.benchmark.txt"
+        "<benchmarks>/gatk_genotype_gvcfs/<results>/gatk-genotype-gvcf-{callmode}/{callset}.allsites.vcf.gz.benchmark.txt"
     log:
-        "<logs>/gatk_genotype_gvcfs/<project>/gatk-genotype-gvcf-{callmode}/{callset}.allsites.log",
+        "<logs>/gatk_genotype_gvcfs/<results>/gatk-genotype-gvcf-{callmode}/{callset}.allsites.log",
     threads: 1
     shell:
         """

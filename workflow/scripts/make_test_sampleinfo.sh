@@ -16,7 +16,13 @@ csvtk cut -f "Sample,Run,ScientificName,SampleName" "${RUNINFO}" \
     | csvtk replace -f SampleAlias,AuthorSample -p "-GH1" -r "GH" \
     | csvtk replace -f AuthorSample -p "^[A-Z]+-" -r "" \
     | csvtk replace -f SampleAlias -p "PUN-(BCRD|INJ|LO|PCT|POTR)" -r 'PUN-Y-$1' \
-    | csvtk replace -f SampleAlias -p "PUN-(ELF|JMC|LH|MT|UCSD)" -r 'PUN-R-$1' >sraruninfo.csv 2>"${LOG}"
+    | csvtk replace -f SampleAlias -p "PUN-(ELF|JMC|LH|MT|UCSD)" -r 'PUN-R-$1' \
+    | csvtk rename -f SampleName -n SampleNameBak | csvtk rename -f SampleAlias -n SampleName \
+    | csvtk rename -f SampleNameBak -n SampleAlias >sraruninfo.csv 2>"${LOG}"
 
-csvtk join sraruninfo.csv "${SAMPLES}" -f "AuthorSample;Sample" >"${OUTFILE}" 2>>"${LOG}"
+csvtk join sraruninfo.csv "${SAMPLES}" -f "AuthorSample;Sample" \
+    | csvtk mutate -f Taxon -p "\"?ssp. ([a-z\., ]+)" -n Population \
+    | csvtk replace -f Population -p ", yellow" -r "-Y" \
+    | csvtk replace -f Population -p ", red" -r "-R" \
+    | csvtk replace -f Population -p "M. " -r "" >"${OUTFILE}" 2>>"${LOG}"
 rm -f sraruninfo.csv

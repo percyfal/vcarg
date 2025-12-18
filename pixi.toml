@@ -12,11 +12,12 @@ version = "0.1.0"
 args = [
   { "arg" = "profile", "default" = "profiles/local" },
   { "arg" = "config", "default" = "config/config.yaml" },
+  { "arg" = "directory", "default" = "PRJNA549183" },
 ]
-cmd = "snakemake --directory work --profile {{profile}} --configfile {{config}}"
+cmd = "snakemake  --configfile {{config}} --directory {{directory}} --profile {{profile}}  "
 
 [dependencies]
-python = ">=3.13.11,<3.15"
+python = ">=3.12,<3.13"
 conda = ">=25.11.1,<26"
 
 [pypi-dependencies]
@@ -47,11 +48,12 @@ pytest = "*"
 depends-on = [
   { "task" = "_snakemake", "environment" = "full", "args" = [
     { config = "config/config.test.yaml" },
+    { directory = "PRJNA549183.test" },
   ] },
 ]
 
 [feature.test.tasks.dry]
-cmd = "snakemake --directory work --profile profiles/local --configfile config/config.test.yaml -n -p -F"
+cmd = "snakemake --directory PRJNA549183.dry --profile profiles/local --configfile config/config.test.yaml -n -p -F"
 
 [feature.test.tasks.full]
 depends-on = [{ task = "_snakemake", environment = "full" }]
@@ -90,16 +92,33 @@ r-ggplot2 = ">=4.0.1,<5"
 r-gplots = ">=3.3.0,<4"
 r-gsalib = ">=2.2.1,<3"
 
+[feature.variation.dependencies]
+bcftools = "*"
+htslib = "*"
+vcflib = "*"
+vcftools = "*"
+
+[feature.phasing.dependencies]
+shapeit5 = "*"
+beagle = "*"
+
+[feature.fastdfe.dependencies]
+fastdfe = "*"
+cyvcf2 = ">=0.31.0,<0.32"
+
 [environments]
 snakemake = { features = ["snakemake"], solve-group = "default" }
 sratools = { features = ["sratools", "textutils"], solve-group = "default" }
 textutils = { features = ["textutils"], solve-group = "default" }
 full = { features = [
   "bwa",
+  "fastdfe",
   "gatk4",
+  "phasing",
   "snakemake",
   "sratools",
   "test",
   "textutils",
+  "variation",
 ], solve-group = "default" }
-lint = { features = ["snakemake", "lint"], solve-group = "default" }
+lint = { features = ["snakemake", "lint", "fastdfe"], solve-group = "default" }

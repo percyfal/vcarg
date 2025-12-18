@@ -16,42 +16,36 @@ include: "rules/common.smk"
 # Path variables
 ##############################
 pathvars:
-    project = str(bioproject),
-    ref = str(bioproject / "ref"),
+    bioproject = str(bioproject),
+    ref = "ref",
+    resources = "resources",
+    results = "results",
+    work = "work",
 
 
 ##############################
 # Default target
 ##############################
-i = sampleinfo.loc[:, "SampleAlias"].isin(config["samples"])
+i = sampleinfo.loc[:, "SampleName"].isin(config["samples"])
 sampleinfo = sampleinfo.loc[i, :]
 
 # Wildcard constraints
 wildcard_constraints:
     callmode="raw|bqsr",
     callset="all",
-    samplealias="(" + "|".join(sampleinfo.SampleAlias.values) + ")",
-
+    samplename="(" + "|".join(sampleinfo.SampleName.values) + ")",
 
 ALL = {
-    "sampleinfo": bioproject / "sampleinfo.csv",
-    #"bwa_index": bioproject / "ref" / config["reference"],
-    # "bwa": expand(
-    #     "<project>/bam_bwa_srr/{samplealias}/{srrun}.sort.cram",
-    #     zip,
-    #     srrun=sampleinfo["Run"],
-    #     samplealias=sampleinfo["SampleAlias"],
-    # ),
-    "gatk_filter": expand(
-        "<project>/gatk-hc-filter-bqsr/{samplealias}.g.vcf.gz",
-        samplealias=sampleinfo["SampleAlias"],
-    ),
-    "gatk_cram": expand(
-        "<project>/gatk-bqsr-cram/{samplealias}.cram",
-        samplealias=sampleinfo["SampleAlias"],
-    ),
-    "gatk_genotype": "<project>/gatk-genotype-gvcf-bqsr/all.allsites.vcf.gz",
+    "aa": "<results>/ancestral_allele/all.vcf.gz",
 }
+
+sampleinfo_file = Path("sampleinfo.csv")
+
+if not sampleinfo_file.exists():
+    logger.warning(f"Sampleinfo file {sampleinfo_file} does not exist.")
+    logger.info("Rerun workflow once sampleinfo is generated.")
+    ALL = {"sampleinfo": str(sampleinfo_file)}
+
 
 
 rule all:
@@ -69,7 +63,8 @@ include: "rules/sra.smk"
 include: "rules/bwa.smk"
 include: "rules/gatk.smk"
 include: "rules/ref.smk"
-
+include: "rules/variation.smk"
+include: "rules/phasing.smk"
 
 onstart:
     print("Starting workflow...")

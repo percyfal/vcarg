@@ -9,7 +9,7 @@ from snakemake.logging import logger
 validate(config, schema="../schemas/config.schema.yaml")
 
 try:
-    sampleinfo = pd.read_csv(bioproject / "sampleinfo.csv", sep=",")
+    sampleinfo = pd.read_csv("sampleinfo.csv", sep=",")
 except FileNotFoundError:
     logger.warning("sampleinfo.csv not found. Creating empty sampleinfo DataFrame.")
     logger.warning("Rerun the workflow once sampleinfo.csv has been generated")
@@ -29,16 +29,16 @@ if "datasources" in config.keys():
     )
 
 
-def get_samplealias_dict(wildcards):
-    samplealias = wildcards.samplealias
-    samplename = sampleinfo.set_index("SampleAlias").loc[samplealias].SampleName
-    srrun = sampleinfo.set_index("SampleAlias").loc[samplealias].Run
-    info = {"srrun": srrun, "samplename": samplename, "sample": samplealias}
+def get_samplename_dict(wildcards):
+    samplename = wildcards.samplename
+    samplealias = sampleinfo.set_index("SampleName").loc[samplename].SampleAlias
+    srrun = sampleinfo.set_index("SampleName").loc[samplename].Run
+    info = {"srrun": srrun, "samplename": samplename, "samplealias": samplealias}
     return info
 
 
 def get_read_group(wildcards):
-    info = get_samplealias_dict(wildcards)
+    info = get_samplename_dict(wildcards)
     run = info["srrun"]
     sample = info["samplename"]
     rg = f'-R "@RG\\tID:{run}\\tSM:{sample}\\tPL:ILLUMINA"'
@@ -46,8 +46,8 @@ def get_read_group(wildcards):
 
 
 def get_sample_runs(wildcards):
-    samplealias = wildcards.samplealias
-    srrun = sampleinfo.set_index("SampleAlias").loc[samplealias].Run
+    samplename = wildcards.samplename
+    srrun = sampleinfo.set_index("SampleName").loc[samplename].Run
     return srrun
 
 

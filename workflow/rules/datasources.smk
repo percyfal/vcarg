@@ -1,7 +1,7 @@
 rule download_datasources:
     """Download datasources listed in config file"""
     output:
-        urltarget="<project>/{urltarget}",
+        urltarget="{urltarget}",
     input:
         lambda wildcards: storage(
             config.get("datasources", {}).get(wildcards.urltarget)

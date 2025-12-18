@@ -2,13 +2,13 @@ rule sra_prefetch:
     """Prefetch sra record. Note that output name is determined by
     prefetch."""
     output:
-        srrun=temp("<project>/sra/{srrun}/{srrun}.sra"),
+        srrun=temp("<work>/sra/{srrun}/{srrun}.sra"),
     conda:
         "../envs/sratools.yaml"
     benchmark:
-        "benchmarks/<project>/sra_prefetch/sra/{srrun}.benchmark.txt"
+        "benchmarks/<work>/sra_prefetch/sra/{srrun}.benchmark.txt"
     log:
-        "logs/<project>/sra_prefetch/sra/{srrun}.log",
+        "logs/<work>/sra_prefetch/sra/{srrun}.log",
     priority: 0
     threads: 1
     shell:
@@ -20,15 +20,15 @@ rule sra_prefetch:
 rule fastq_fasterq_dump:
     """Dump fastq from sra file using fasterq-dump."""
     output:
-        fastq="<project>/fastq_fasterq_dump/{srrun}/{srrun}.fastq.gz",
+        fastq="<work>/fastq_fasterq_dump/{srrun}/{srrun}.fastq.gz",
     input:
-        sra="<project>/sra/{srrun}/{srrun}.sra",
+        sra="<work>/sra/{srrun}/{srrun}.sra",
     conda:
         "../envs/sratools.yaml"
     benchmark:
-        "benchmarks/<project>/fastq_fasterq_dump/{srrun}/{srrun}.fastq.gz.benchmark.txt"
+        "benchmarks/<work>/fastq_fasterq_dump/{srrun}/{srrun}.fastq.gz.benchmark.txt"
     log:
-        "logs/<project>/fastq_fasterq_dump/{srrun}/{srrun}.fastq.gz.log",
+        "logs/<work>/fastq_fasterq_dump/{srrun}/{srrun}.fastq.gz.log",
     threads: 12
     shell:
         """
@@ -45,13 +45,13 @@ rule bam_bwa_sra:
     NB: This will use the SampleName column to identify the sample
     (not the SRS id)."""
     output:
-        cram="<project>/bam_bwa_sra/{samplealias}/{srrun}.sort.md.cram",
-        crai="<project>/bam_bwa_sra/{samplealias}/{srrun}.sort.md.cram.crai",
+        cram="<work>/bam_bwa_sra/{samplename}/{srrun}.sort.md.cram",
+        crai="<work>/bam_bwa_sra/{samplename}/{srrun}.sort.md.cram.crai",
     input:
-        srr="<project>/sra/{srrun}/{srrun}.sra",
-        reference=f"<project>/ref/{config['reference']}",
+        srr="<work>/sra/{srrun}/{srrun}.sra",
+        reference=f"<work>/ref/{config['reference']}",
         index=expand(
-            "<project>/{ref}.{sfx}",
+            "<work>/{ref}.{sfx}",
             ref=f"ref/{config['reference']}",
             sfx=BWA_INDEX_SUFFIX,
         ),
@@ -62,9 +62,9 @@ rule bam_bwa_sra:
     conda:
         "../envs/bwamem.yaml"
     benchmark:
-        "benchmarks/<project>/bam_bwa_sra/{samplealias}/{srrun}.sort.md.bam.benchmark.txt"
+        "benchmarks/<work>/bam_bwa_sra/{samplename}/{srrun}.sort.md.bam.benchmark.txt"
     log:
-        "logs/<project>/bam_bwa_sra/{samplealias}/{srrun}.sort.md.bam.log",
+        "logs/<work>/bam_bwa_sra/{samplename}/{srrun}.sort.md.bam.log",
     threads: 12
     priority: 50
     shell:
