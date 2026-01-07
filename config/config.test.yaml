@@ -22,12 +22,5 @@ samples:
   - PUN-Y-INJ
   - PUN-Y-BCRD
   - CLV_4
-  # - ARI-159_83
-  # - PUN-R-LH
-  # - PUN-Y-PCT
-  # - PUN-Y-LO
-  # - PUN-R-UCSD
-  # - PUN-R-MT
-  # - PUN-Y-POTR
 outgroup_populations:
   - clevelandii

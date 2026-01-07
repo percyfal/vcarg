@@ -34,3 +34,43 @@ rule samtools_faidx:
         """
         samtools faidx {input} > {log} 2>&1
         """
+
+
+rule make_intervals:
+    """Make intervals for variant calling"""
+    output:
+        bed="<ref>/intervals/{ivl}.bed",
+    params:
+        ivl=lambda wildcards: "\n".join([repr(ivl) for ivl in intervals[wildcards.ivl]]),
+    conda:
+        "../envs/gatk.yaml"
+    benchmark:
+        "<benchmarks>/make_intervals/<ref>/intervals/{ivl}.bed.benchmark.txt"
+    log:
+        "<logs>/make_intervals/<ref>/intervals/{ivl}.bed.log",
+    threads: 1
+    shell:
+        """
+        echo -e "{params.ivl}" > {output.bed}
+        """
+
+
+rule make_all_intervals:
+    """Make all intervals file for variant calling"""
+    output:
+        "<ref>/intervals.bed",
+    params:
+        ivl=lambda wildcards: "\n".join(
+            [repr(x) for ivl in intervals.values() for x in ivl]
+        ),
+    conda:
+        "../envs/gatk.yaml"
+    benchmark:
+        "<benchmarks>/make_all_intervals/<ref>/intervals.bed.benchmark.txt"
+    log:
+        "<logs>/make_all_intervals/<ref>/intervals.bed.log",
+    threads: 1
+    shell:
+        """
+        echo -e "{params.ivl}" > {output}
+        """

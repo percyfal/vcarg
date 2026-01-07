@@ -1,6 +1,7 @@
 import os
 from os.path import dirname as dname
 import pandas as pd
+import numpy as np
 from snakemake.utils import validate
 from snakemake.logging import logger
 
@@ -27,6 +28,30 @@ if "datasources" in config.keys():
     datasources = dict(
         zip(config["datasources"].keys(), config["datasources"].values())
     )
+
+
+class Interval:
+    """Zero-based genomic interval."""
+
+    def __init__(self, chrom, start, end):
+        self.chrom = chrom
+        self.start = start
+        self.end = end
+
+    def __len__(self):
+        return self.end - self.start
+
+    def __str__(self):
+        return f"{self.chrom}:{self.start}-{self.end}"
+
+    def __repr__(self):
+        return f"{self.chrom}\t{self.start}\t{self.end}"
+
+
+def get_reference_basename():
+    reference = config["reference"]
+    reference_basename = re.sub(r"(\.fasta|\.fa|\.fna)(.gz|)$", "", reference)
+    return reference_basename
 
 
 def get_samplename_dict(wildcards):
@@ -84,3 +109,58 @@ def gatk_raw_or_bqsr_variant_filtration_options(wildcards):
         ]
 
     return " ".join(options)
+
+
+def _make_intervals():
+    """Split the reference genome into intervals based on config parameters."""
+    logger.info(
+        (
+            "Creating intervals for variant calling and downstream "
+            "processing from reference genome..."
+        )
+    )
+    index_file = os.path.join("ref", config["reference"] + ".fai")
+    if not os.path.exists(index_file):
+        logger.warning(f"Reference index file {index_file} not found.")
+        return []
+    ivl = []
+    min_interval_length = config.get("min_interval_length", 0)
+    max_interval_length = config.get("max_interval_length", np.inf)
+    n = {"total": 0, "passed": 0}
+    for line in open(index_file):
+        n["total"] = n["total"] + 1
+        chrom, seqlength = line.strip().split("\t")[0:2]
+        seqlength = int(seqlength)
+        if seqlength < min_interval_length:
+            logger.warning(
+                f"Skipping {chrom} of length {seqlength} < min_interval_length {min_interval_length}"
+            )
+            continue
+        n["passed"] = n["passed"] + 1
+        n_intervals = int(seqlength / max_interval_length) + 1
+        breaks = np.linspace(0, seqlength, n_intervals + 1, dtype=int)
+        for i in range(n_intervals):
+            ivl.append(Interval(chrom, breaks[i], breaks[i + 1]))
+    logger.info(f"Kept {n['passed']} out of {n['total']} contigs")
+    return ivl
+
+
+def group_intervals():
+    """Group intervals into batches based on interval batch size"""
+    ivl = _make_intervals()
+    if len(ivl) == 0:
+        return {}
+    n = {"total": len(ivl)}
+    intervals = {}
+    interval_batch_size = config.get("interval_batch_size", np.inf)
+    cumsum = np.cumsum([len(reg) for reg in ivl])
+    indices = np.array(cumsum / interval_batch_size, dtype=int)
+    for j in range(max(indices) + 1):
+        i = np.where(indices == j)
+        group_id = f"{ivl[i[0][0]]}"
+        intervals[group_id] = [ivl[k] for k in i[0]]
+    logger.info(
+        f"{n['total']} intervals grouped into {len(intervals)} chunks for parallel processing."
+    )
+    logger.info("Intervals:" + ",".join(intervals.keys()))
+    return intervals

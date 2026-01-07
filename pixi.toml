@@ -53,7 +53,7 @@ depends-on = [
 ]
 
 [feature.test.tasks.dry]
-cmd = "snakemake --directory PRJNA549183.dry --profile profiles/local --configfile config/config.test.yaml -n -p -F"
+cmd = "snakemake --directory PRJNA549183 --profile profiles/local --configfile config/config.yaml -n -p"
 
 [feature.test.tasks.full]
 depends-on = [{ task = "_snakemake", environment = "full" }]

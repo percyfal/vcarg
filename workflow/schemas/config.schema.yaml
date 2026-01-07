@@ -9,10 +9,30 @@ properties:
     description: ENA bioproject name
     type: string
     pattern: "[^ ]+"
+  interval_batch_size:
+    description: >-
+      Size of interval batch.
+    type: integer
+  min_interval_length:
+    description: >-
+      Minimum interval length. Will remove contigs shorter than this
+      number.
+    type: integer
+  max_interval_length:
+    description: >-
+      Maximum interval length. Will split contigs in
+      ceil(contig_length / min_interval_length) equal parts.
+    type: integer
+  outgroup_populations:
+    description: Outgroup populations for ancestral allele determination
+    type: array
+    items:
+      type: string
   project:
     description: Project name
     type: string
     pattern: "[^ ]+"
+  # Possibly turn into object (uri, name)
   reference:
     description: Path to reference file
     type: string

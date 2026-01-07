@@ -8,4 +8,11 @@ use-conda: false
 rerun-triggers: mtime
 rerun-incomplete: true
 cores: 15
-notemp: true
+notemp: false
+
+set-threads:
+  gatk_haplotypecaller_intervals: 3
+
+set-resources:
+  gatk_base_recalibrator:
+    mem_mb: 8000

@@ -11,6 +11,8 @@ project_dir = Path("work") / bioproject
 
 include: "rules/common.smk"
 
+intervals = group_intervals()
+reference_basename = get_reference_basename()
 
 ##############################
 # Path variables
@@ -26,17 +28,27 @@ pathvars:
 ##############################
 # Default target
 ##############################
-i = sampleinfo.loc[:, "SampleName"].isin(config["samples"])
-sampleinfo = sampleinfo.loc[i, :]
+samples = config.get("samples", sampleinfo.loc[:, "SampleName"].tolist())
+try:
+    i = sampleinfo.loc[:, "SampleName"].isin(samples)
+    sampleinfo = sampleinfo.loc[i, :]
+except:
+    pass
 
 # Wildcard constraints
 wildcard_constraints:
+    allsites="(.allsites|)",
     callmode="raw|bqsr",
     callset="all",
+    ivl="(" + "|".join(intervals.keys()) + ")",
+    mode="(.g|)",
     samplename="(" + "|".join(sampleinfo.SampleName.values) + ")",
 
 ALL = {
     "aa": "<results>/ancestral_allele/all.vcf.gz",
+}
+ALL = {
+    "all" : "results/gatk-select-filtered-variants-raw/all.vcf.gz",
 }
 
 sampleinfo_file = Path("sampleinfo.csv")
@@ -76,3 +88,5 @@ onerror:
 
 onsuccess:
     print("Workflow completed successfully!")
+    if len(samples) == 0:
+        print("Generated sampleinfo: rerun to complete workflow")

@@ -83,6 +83,7 @@ rule merge_cram:
         "<benchmarks>/merge_cram/<work>/merge_cram/{samplename}.cram.benchmark.txt"
     log:
         "<logs>/merge_cram/<work>/merge_cram/{samplename}.cram.log",
+    priority: 200
     threads: 1
     shell:
         """
