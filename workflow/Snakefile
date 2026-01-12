@@ -47,9 +47,6 @@ wildcard_constraints:
 ALL = {
     "aa": "<results>/ancestral_allele/all.vcf.gz",
 }
-ALL = {
-    "all" : "results/gatk-select-filtered-variants-raw/all.vcf.gz",
-}
 
 sampleinfo_file = Path("sampleinfo.csv")
 
