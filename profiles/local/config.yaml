@@ -11,8 +11,11 @@ cores: 15
 notemp: false
 
 set-threads:
+  beagle_phase: 15
   gatk_haplotypecaller_intervals: 3
 
 set-resources:
+  beagle_phase:
+    mem_mb: 40000
   gatk_base_recalibrator:
     mem_mb: 8000

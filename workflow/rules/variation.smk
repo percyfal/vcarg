@@ -4,8 +4,8 @@ rule bcftools_view_biallelic_variant_sites:
         vcf="<results>/biallelic-{callmode}/{callset}.vcf.gz",
         csi="<results>/biallelic-{callmode}/{callset}.vcf.gz.csi",
     input:
-        vcf="<results>/gatk-genotype-gvcf-{callmode}/{callset}.allsites.vcf.gz",
-        tbi="<results>/gatk-genotype-gvcf-{callmode}/{callset}.allsites.vcf.gz.tbi",
+        vcf="<results>/gatk-gather-vcfs-{callmode}/{callset}.vcf.gz",
+        tbi="<results>/gatk-gather-vcfs-{callmode}/{callset}.vcf.gz.tbi",
     conda:
         "../envs/variation.yaml"
     benchmark:

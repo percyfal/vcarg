@@ -83,19 +83,7 @@ rule gatk_base_recalibrator:
         csi="<work>/cram_2_bam/{samplename}.bam.csi",
         known_sites="<results>/gatk-select-filtered-variants-raw/all.vcf.gz",
         known_sites_tbi="<results>/gatk-select-filtered-variants-raw/all.vcf.gz.tbi",
-        # known_sites=expand(
-        #     "<work>/gatk-hc-raw/{samplename}.g.vcf.gz",
-        #     samplename=sampleinfo.SampleName.values,
-        # ),
-        # known_sites_tbi=expand(
-        #     "<work>/gatk-hc-raw/{samplename}.g.vcf.gz.tbi",
-        #     samplename=sampleinfo.SampleName.values,
-        # ),
         ref=f"<ref>/{config['reference']}",
-    # params:
-    #     known_sites=lambda wildcards, input: " ".join(
-    #         [f"--known-sites {x}" for x in input.known_sites]
-    #     ),
     conda:
         "../envs/gatk.yaml"
     benchmark:
@@ -240,14 +228,18 @@ rule gatk_sample_name_map:
 rule gatk_genomics_db_import_intervals:
     """Import intervals into GenomicsDB for GATK joint genotyping."""
     output:
-        temp(
-            directory(
-                "<work>/gatk-genomics-db-import-intervals-{callmode}/{ivl}{mode}"
-            )
-        ),
+        directory("<work>/gatk-genomics-db-import-intervals-{callmode}/{ivl}{mode}"),
     input:
         intervals="<ref>/intervals/{ivl}.bed",
         sample_name_map="<work>/gatk-sample-name-map/{ivl}{mode}-{callmode}.samples.txt",
+        vcf=expand(
+            "<work>/gatk-hc-{{callmode}}/{samplename}/{{ivl}}{{mode}}.vcf.gz",
+            samplename=sampleinfo.SampleName.values,
+        ),
+        tbi=expand(
+            "<work>/gatk-hc-{{callmode}}/{samplename}/{{ivl}}{{mode}}.vcf.gz.tbi",
+            samplename=sampleinfo.SampleName.values,
+        ),
     conda:
         "../envs/gatk.yaml"
     benchmark:
@@ -255,6 +247,7 @@ rule gatk_genomics_db_import_intervals:
     log:
         "<logs>/gatk_genomics_db_import_intervals/<work>/gatk-genomics-db-import-intervals-{callmode}/{ivl}{mode}.log",
     threads: 14
+    priority: 200
     shell:
         """
         gatk GenomicsDBImport -OVI true --genomicsdb-workspace-path {output} \
@@ -301,7 +294,7 @@ rule gatk_combine_gvcfs:
 
 
 rule gatk_genotype_gvcfs_intervals:
-    """GATK GenotypeGVCFs by intervals."""
+    """GATK GenotypeGVCFs by intervals using GenomicsDB as input."""
     output:
         vcf=temp(
             "<work>/gatk-genotype-gvcf-{callmode}/{callset}{allsites}.{ivl}.vcf.gz"
@@ -312,7 +305,7 @@ rule gatk_genotype_gvcfs_intervals:
     input:
         # FIXME: alternative input would be from combine-GVCFs:
         # vcf="<work>/gatk-combine-gvcf-{callmode}/{callset}.g.vcf.gz"
-        db="<work>/gatk-genomics-db-import-intervals-{callmode}/{ivl}",
+        db="<work>/gatk-genomics-db-import-intervals-{callmode}/{ivl}.g",
         ref=f"<ref>/{config['reference']}",
         intervals="<ref>/intervals/{ivl}.bed",
     params:
@@ -339,22 +332,46 @@ rule gatk_gather_vcfs:
     """Gather GATK GenotypeGVCFs interval VCFs into single VCF per callset."""
     output:
         vcf="<results>/gatk-gather-vcfs-{callmode}/{callset}{allsites}.vcf.gz",
-        tbi="<results>/gatk-gather-vcfs-{callmode}/{callset}{allsites}.vcf.gz.tbi",
     input:
         vcf=expand(
             "<work>/gatk-genotype-gvcf-{{callmode}}/{{callset}}{{allsites}}.{ivl}.vcf.gz",
             ivl=intervals.keys(),
         ),
+        tbi=expand(
+            "<work>/gatk-genotype-gvcf-{{callmode}}/{{callset}}{{allsites}}.{ivl}.vcf.gz.tbi",
+            ivl=intervals.keys(),
+        ),
+    params:
+        vcf=lambda wildcards, input: " ".join([f"--INPUT {x}" for x in input.vcf]),
     conda:
         "../envs/gatk.yaml"
     benchmark:
-        "<benchmarks>/gatk_gather_vcfs/<results>/gatk-gather-vcfs-{callmode}/{callset}{allsites}.vcf.gz"
+        "<benchmarks>/gatk_gather_vcfs/<results>/gatk-gather-vcfs-{callmode}/{callset}{allsites}.vcf.gz.benchmark.txt"
     log:
-        "<logs>/gatk_gather_vcfs/<results>/gatk-gather-vcfs-{callmode}/{callset}{allsites}.vcf.gz",
+        "<logs>/gatk_gather_vcfs/<results>/gatk-gather-vcfs-{callmode}/{callset}{allsites}.vcf.gz.log",
     threads: 1
     shell:
         """
-        gatk GatherVcfs -OVI true --INPUT {input} --OUTPUT {output.vcf} > {log} 2>&1
+        gatk GatherVcfs {params.vcf} --OUTPUT {output.vcf} > {log} 2>&1
+        """
+
+
+rule bcftools_create_index:
+    """Create index with bcftools"""
+    output:
+        tbi="<results>/gatk-gather-vcfs-{callmode}/{callset}{allsites}.vcf.gz.tbi",
+    input:
+        vcf="<results>/gatk-gather-vcfs-{callmode}/{callset}{allsites}.vcf.gz",
+    conda:
+        "../envs/bcftools.yaml"
+    benchmark:
+        "<benchmarks>/bcftools_create_index/<results>/gatk-gather-vcfs-{callmode}/{callset}{allsites}.vcf.gz.tbi.benchmark.txt"
+    log:
+        "<logs>/bcftools_create_index/<results>/gatk-gather-vcfs-{callmode}/{callset}{allsites}.vcf.gz.tbi.log",
+    threads: 1
+    shell:
+        """
+        bcftools index -t {input.vcf}
         """
 
 
