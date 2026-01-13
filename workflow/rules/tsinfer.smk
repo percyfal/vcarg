@@ -28,14 +28,33 @@ rule make_sampleinfo_population:
         csvtk cut -f {params.populations_columns} {input.csv} | csvtk sort -k {params.popindex} | csvtk uniq -f {params.popindex} > {output.populations} 2>> {log}
         """
 
+rule vcf_by_chrom:
+    """Subset VCF by chromosome/contig"""
+    output:
+        vcf=temp("<results>/ancestral_allele/{callset}.{chrom}.vcf.gz"),
+        csi=temp("<results>/ancestral_allele/{callset}.{chrom}.vcf.gz.csi"),
+    input:
+        vcf="<results>/ancestral_allele/{callset}.vcf.gz",
+        csi="<results>/ancestral_allele/{callset}.vcf.gz.csi",
+    conda:
+        "../envs/bcftools.yaml",
+    benchmark: "<benchmarks>/vcf_by_chrom/<results>/ancestral_allele/{callset}.{chrom}.vcf.gz.benchmark.txt",
+    log: "<logs>/vcf_by_chrom/<results>/ancestral_allele/{callset}.{chrom}.vcf.gz.log",
+    threads: 1
+    shell:
+        """
+        bcftools view -r {wildcards.chrom} {input.vcf} -Oz -o {output.vcf}
+        bcftools index {output.vcf} -c -o {output.csi}
+        """
+
 
 rule vcf_to_vcz:
     """Convert VCF to VCZ format"""
     output:
         vcz=directory("results/vcz/{callset}.{chrom}.vcz"),
     input:
-        vcf="<results>/ancestral_allele/{callset}.vcf.gz",
-        csi="<results>/ancestral_allele/{callset}.vcf.gz.csi",
+        vcf="<results>/ancestral_allele/{callset}.{chrom}.vcf.gz",
+        csi="<results>/ancestral_allele/{callset}.{chrom}.vcf.gz.csi",
     conda:
         "../envs/bio2zarr.yaml"
     benchmark:
