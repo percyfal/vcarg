@@ -47,6 +47,20 @@ class Interval:
     def __repr__(self):
         return f"{self.chrom}\t{self.start}\t{self.end}"
 
+    @staticmethod
+    def parse(input_str):
+        fields = input_str.strip().split("\t")
+        if len(fields) == 3:
+            chrom, start, end = fields
+        elif len(fields) == 1:
+            chrom, positions = input_str.split(":")
+            start, end = positions.split("-")
+        else:
+            chrom = fields[0]
+            start = 0
+            end = int(fields[1])
+        return Interval(chrom, int(start), int(end))
+
 
 def get_reference_basename():
     reference = config["reference"]
@@ -127,20 +141,24 @@ def _make_intervals():
     min_interval_length = config.get("min_interval_length", 0)
     max_interval_length = config.get("max_interval_length", np.inf)
     n = {"total": 0, "passed": 0}
-    for line in open(index_file):
+    if config.get("regions", None) is not None:
+        logger.info("Using user-specified regions for interval creation.")
+        source = config["regions"]
+    else:
+        source = open(index_file)
+    for line in source:
         n["total"] = n["total"] + 1
-        chrom, seqlength = line.strip().split("\t")[0:2]
-        seqlength = int(seqlength)
-        if seqlength < min_interval_length:
+        iv = Interval.parse(line)
+        if len(iv) < min_interval_length:
             logger.warning(
-                f"Skipping {chrom} of length {seqlength} < min_interval_length {min_interval_length}"
+                f"Skipping {iv.chrom} of length {len(iv)} < min_interval_length {min_interval_length}"
             )
             continue
         n["passed"] = n["passed"] + 1
-        n_intervals = int(seqlength / max_interval_length) + 1
-        breaks = np.linspace(0, seqlength, n_intervals + 1, dtype=int)
+        n_intervals = int(len(iv) / max_interval_length) + 1
+        breaks = np.linspace(iv.start, iv.end, n_intervals + 1, dtype=int)
         for i in range(n_intervals):
-            ivl.append(Interval(chrom, breaks[i], breaks[i + 1]))
+            ivl.append(Interval(iv.chrom, breaks[i], breaks[i + 1]))
     logger.info(f"Kept {n['passed']} out of {n['total']} contigs")
     return ivl
 

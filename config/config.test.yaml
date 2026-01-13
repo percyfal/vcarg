@@ -24,3 +24,15 @@ samples:
   - CLV_4
 outgroup_populations:
   - clevelandii
+
+min_interval_length: 1000000
+max_interval_length: 3000000
+interval_batch_size: 5000000
+
+# From Stankowski et al. 2019
+mutation_rate: 1.5e-8
+recombination_rate: 1.5e-8
+
+tsinfer:
+  sampleinfo_columns: Sample,Population,Latitude,Longitude,SampleName,AuthorSample
+  populations_columns: Population,Taxon,ScientificName

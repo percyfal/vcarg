@@ -7,6 +7,8 @@ platforms = ["linux-64"]
 version = "0.1.0"
 
 [tasks]
+mockfai = "mkdir -p ref && echo 'LG1\t20551961\t5\t80\t81' > ref/M_aurantiacus_v1_splitline_ordered.fasta.fai"
+
 
 [tasks._snakemake]
 args = [
@@ -14,7 +16,7 @@ args = [
   { "arg" = "config", "default" = "config/config.yaml" },
   { "arg" = "directory", "default" = "PRJNA549183" },
 ]
-cmd = "snakemake  --configfile {{config}} --directory {{directory}} --profile {{profile}}  "
+cmd = "snakemake  --configfile {{config}} --directory {{directory}} --profile {{profile}}"
 
 [dependencies]
 python = ">=3.12,<3.13"
@@ -72,7 +74,9 @@ snakefmt = "*"
 
 [feature.lint.tasks]
 actionlint = { cmd = "actionlint", env = { SHELLCHECK_OPTS = "-e SC2086" } }
-lint = { cmd = "pre-commit run --hook-stage=manual", description = "Run all linters and formatters on staged code" }
+lint = { cmd = "pre-commit run --hook-stage=manual", description = "Run all linters and formatters on staged code", depends-on = [
+  { task = "mockfai" },
+] }
 lintall = { cmd = "pre-commit run --all-files --hook-stage=manual", description = "Run all linters and formatters on all code" }
 pre-commit-install = "pre-commit install --install-hooks -t=pre-commit -t=pre-push"
 pre-commit-install-minimal = "pre-commit install -t=pre-commit"
@@ -106,6 +110,15 @@ beagle = "*"
 fastdfe = "*"
 cyvcf2 = ">=0.31.0,<0.32"
 
+[feature.tsinfer.dependencies]
+bio2zarr = "*"
+tsinfer = "=0.4.1,<0.5"
+tskit = "=0.6.4,<1.0.0"
+numpy = ">=1.26.4,<2"
+
+[feature.tsinfer.pypi-dependencies]
+tsdate = ">=0.2.3, <0.3"
+
 [environments]
 snakemake = { features = ["snakemake"], solve-group = "default" }
 sratools = { features = ["sratools", "textutils"], solve-group = "default" }
@@ -119,6 +132,7 @@ full = { features = [
   "sratools",
   "test",
   "textutils",
+  "tsinfer",
   "variation",
 ], solve-group = "default" }
 lint = { features = ["snakemake", "lint", "fastdfe"], solve-group = "default" }

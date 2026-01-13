@@ -1,0 +1,9 @@
+channels:
+  - conda-forge
+  - bioconda
+dependencies:
+  - tsinfer
+  - tskit
+  - pip
+  - pip:
+    - tsdate

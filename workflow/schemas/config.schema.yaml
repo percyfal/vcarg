@@ -23,6 +23,9 @@ properties:
       Maximum interval length. Will split contigs in
       ceil(contig_length / min_interval_length) equal parts.
     type: integer
+  mutation_rate:
+    description: Mutation rate per base pair per generation
+    type: number
   outgroup_populations:
     description: Outgroup populations for ancestral allele determination
     type: array
@@ -32,6 +35,13 @@ properties:
     description: Project name
     type: string
     pattern: "[^ ]+"
+  recombination_rate:
+    description: Recombination rate
+    type: number
+  recombination_rate_map:
+    description: Recombination rate map
+    type: string
+    format: uri
   # Possibly turn into object (uri, name)
   reference:
     description: Path to reference file
@@ -80,7 +90,17 @@ properties:
           names need to be provide in lower case.
         example: 'librarystrategy=="WGS" && samplename!="Assembly Plant"'
         type: string
-
+  tsinfer:
+    sampleinfo_columns:
+      type: string
+      description: >-
+        Comma-separated string of columns to be included in tsinfer
+        sampleinfo file
+    populations_columns:
+      type: string
+      description: >-
+        Comma-separated string of columns to be included in tsinfer
+        populations file
 
 
 required:
