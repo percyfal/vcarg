@@ -1,4 +1,4 @@
-# bioprojarg
+# vcarg
 
 Snakemake workflow to run tree sequence inference on a Bioproject ID
 in the European Nucleotide Archive. Given a Bioproject ID the workflow
@@ -8,9 +8,9 @@ calling followed by treesequence inference with tsinfer+tsdate.
 
 ## Quickstart
 
-Clone the repo `bioprojarg` from `github`:
+Clone the repo `vcarg` from `github`:
 
-    git clone https://github.com/percyfal/bioprojarg
+    git clone https://github.com/percyfal/vcarg
 
 and initialize `pixi` environments with
 
