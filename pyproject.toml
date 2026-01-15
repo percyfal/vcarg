@@ -1,5 +1,5 @@
 [project]
-name = "bioprojarg"
+name = "vcarg"
 dynamic = ["version"]
 authors = [{ name = "Per Unneberg", email = "per.unneberg@nbis.se" }]
 maintainers = [{ name = "Per Unneberg", email = "per.unneberg@nbis.se" }]
@@ -45,10 +45,10 @@ source = "vcs"
 allow-direct-references = true
 
 [tool.hatch.build.hooks.vcs]
-version-file = "src/bioprojarg/_version.py"
+version-file = "src/vcarg/_version.py"
 
 [tool.hatch.build.targets.wheel]
-packages = ["src/bioprojarg"]
+packages = ["src/vcarg"]
 
 [project.scripts]
-bioprojarg = "bioprojarg.cli:cli"
+vcarg = "vcarg.cli:cli"

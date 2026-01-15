@@ -1415,14 +1415,6 @@ packages:
   - pkg:pypi/bio2zarr?source=hash-mapping
   size: 54258
   timestamp: 1748016467390
-- pypi: ./
-  name: bioprojarg
-  version: 0.0.0
-  sha256: 2d9255db378e28f5fbda784e50213cf1493d15f250e49df46a1fe96e4bf5ed02
-  requires_dist:
-  - click>=8.0
-  requires_python: '>=3.9'
-  editable: true
 - conda: https://conda.anaconda.org/conda-forge/linux-64/biopython-1.81-py312h98912ed_1.conda
   sha256: dd68be84753ac0f7e375fbf868beb9d9908d7b00616e37ddc03a77ec053a708d
   md5: 7da59976d8ba240c35fbcbfd42968a1d
@@ -6370,6 +6362,14 @@ packages:
   - pkg:pypi/urllib3?source=hash-mapping
   size: 103172
   timestamp: 1767817860341
+- pypi: ./
+  name: vcarg
+  version: 0.0.0
+  sha256: 194a209027841a6139ae298c6d2791592e60ab4b49c7db1e0fe56fb201799467
+  requires_dist:
+  - click>=8.0
+  requires_python: '>=3.9'
+  editable: true
 - conda: https://conda.anaconda.org/bioconda/linux-64/vcflib-1.0.14-h34261f4_0.tar.bz2
   sha256: 345a8a39fce8cf9f43fcb355f125c6f420f68026ef2b93c1c3f89c8d48ea67ec
   md5: f55d95b7e2e66f858c572661bc7371cc

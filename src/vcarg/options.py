@@ -7,7 +7,7 @@ import click
 from click.core import Command, Context, Parameter
 from click.decorators import option
 
-from bioprojarg.env import Environment
+from vcarg.env import Environment
 
 logger = logging.getLogger(__name__)
 

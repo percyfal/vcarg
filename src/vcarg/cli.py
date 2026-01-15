@@ -4,7 +4,6 @@ import logging
 import pathlib
 import shutil
 import subprocess
-from importlib import resources
 
 import click
 
@@ -16,6 +15,8 @@ from . import options
 from . import __version__
 
 logger = logging.getLogger(__name__)
+
+NOT_IMPLEMENTED = True
 
 
 def snakemake(*, targets=None, smk_options=None, snakefile=None):
@@ -51,7 +52,7 @@ pass_environment = click.make_pass_decorator(Environment, ensure=True)
 @click.group(
     context_settings=CONTEXT_SETTINGS,
     help=__doc__,
-    name="bioprojarg",
+    name="vcarg",
 )
 @click.version_option(version=__version__)
 @options.debug_option()
@@ -63,7 +64,7 @@ def cli(env):
     )
     if env.debug:
         logging.getLogger().setLevel(logging.DEBUG)
-    logger.debug("Starting bioprojarg CLI")
+    logger.debug("Starting vcarg CLI")
 
 
 @cli.command(
@@ -71,9 +72,12 @@ def cli(env):
 )
 @options.test_option()
 @click.argument("snakemake_args", nargs=-1, type=click.UNPROCESSED)
-def run(test, snakemake_args):
+@click.option("--snakefile", "-s", help="Path to Snakefile", type=click.Path(exists=True))
+def run(test, snakemake_args, snakefile):
     """Run snakemake workflow"""
     click.echo("Running Snakemake workflow")
+    click.echo("Currently not implemented")
+    if NOT_IMPLEMENTED:
+        return
     smk_options = " ".join(list(snakemake_args) + test)
-    snakefile = resources.files("bioprojarg") / "workflow" / "Snakefile"
     snakemake(smk_options=smk_options, snakefile=snakefile, targets="")
