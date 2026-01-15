@@ -90,6 +90,9 @@ properties:
           names need to be provide in lower case.
         example: 'librarystrategy=="WGS" && samplename!="Assembly Plant"'
         type: string
+  tsdate_options:
+    type: string
+    description: tsdate options
   tsinfer:
     sampleinfo_columns:
       type: string

@@ -28,6 +28,7 @@ rule make_sampleinfo_population:
         csvtk cut -f {params.populations_columns} {input.csv} | csvtk sort -k {params.popindex} | csvtk uniq -f {params.popindex} > {output.populations} 2>> {log}
         """
 
+
 rule vcf_by_chrom:
     """Subset VCF by chromosome/contig"""
     output:
@@ -37,9 +38,11 @@ rule vcf_by_chrom:
         vcf="<results>/ancestral_allele/{callset}.vcf.gz",
         csi="<results>/ancestral_allele/{callset}.vcf.gz.csi",
     conda:
-        "../envs/bcftools.yaml",
-    benchmark: "<benchmarks>/vcf_by_chrom/<results>/ancestral_allele/{callset}.{chrom}.vcf.gz.benchmark.txt",
-    log: "<logs>/vcf_by_chrom/<results>/ancestral_allele/{callset}.{chrom}.vcf.gz.log",
+        "../envs/bcftools.yaml"
+    benchmark:
+        "<benchmarks>/vcf_by_chrom/<results>/ancestral_allele/{callset}.{chrom}.vcf.gz.benchmark.txt"
+    log:
+        "<logs>/vcf_by_chrom/<results>/ancestral_allele/{callset}.{chrom}.vcf.gz.log",
     threads: 1
     shell:
         """
@@ -102,6 +105,7 @@ rule tsdate:
     params:
         mutation_rate=config.get("mutation_rate", 1.25e-8),
         recombination_rate=config.get("recombination_rate", 1e-8),
+        tsdate_options=config.get("tsdate_options", ""),
     conda:
         "../envs/tsinfer.yaml"
     benchmark:
@@ -111,7 +115,7 @@ rule tsdate:
     threads: 1
     shell:
         """
-        tsdate date -m {params.mutation_rate} -p {input.trees} {output.trees} > {log} 2>&1
+        tsdate date {params.tsdate_options} -m {params.mutation_rate} -p {input.trees} {output.trees} > {log} 2>&1
         """
 
 
