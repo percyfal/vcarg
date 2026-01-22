@@ -4,7 +4,7 @@ Snakemake workflow to run tree sequence inference on a Bioproject ID
 in the European Nucleotide Archive. Given a Bioproject ID the workflow
 will download Sequence Read Archive (SRA) run info, merge with
 user-provided sample metadata, and run GATK best practice variant
-calling followed by treesequence inference with tsinfer+tsdate.
+calling followed by tree sequence inference with tsinfer+tsdate.
 
 ## Quickstart
 
@@ -40,6 +40,16 @@ subset of samples, and for one linkage group
 reference sequence but only mappings to the selected region are kept.
 
     pixi run test
+
+## Workflow rulegraph
+
+<!-- markdownlint-disable MD013 MD033 -->
+
+| <img src="./static/rulegraph.svg" width="50%" alt="Screenshot of the vcarg rulegraph"> |
+|:--------------------------------------------------------------------------------------:|
+| Vcarg Snakemake rulegraph                                                              |
+
+<!-- markdownlint-enable MD013 MD033 -->
 
 ## References
 

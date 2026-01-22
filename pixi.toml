@@ -54,11 +54,20 @@ depends-on = [
   ] },
 ]
 
+[feature.test.tasks.full]
+depends-on = [{ task = "_snakemake", environment = "full" }]
+
 [feature.test.tasks.dry]
 cmd = "snakemake --directory PRJNA549183 --profile profiles/local --configfile config/config.yaml -n -p"
 
-[feature.test.tasks.full]
-depends-on = [{ task = "_snakemake", environment = "full" }]
+[feature.test.tasks.dag]
+cmd = "snakemake --directory PRJNA549183.test --profile profiles/local --configfile config/config.yaml --dag | dot -T svg > dag.svg"
+
+[feature.test.tasks.rulegraph]
+cmd = "snakemake --directory PRJNA549183.test --profile profiles/local --configfile config/config.yaml --rulegraph | dot -T svg > rulegraph.svg"
+
+[feature.test.tasks.filegraph]
+cmd = "snakemake --directory PRJNA549183.test --profile profiles/local --configfile config/config.yaml --filegraph | dot -T svg > filegraph.svg"
 
 [feature.lint.dependencies]
 python = "*"
